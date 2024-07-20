@@ -1,0 +1,38 @@
+---
+- name: Deploy CV Docker Container
+  hosts: debian_agents
+  become: yes
+
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Create project directory
+      file:
+        path: ~/ansible
+        state: directory
+
+    - name: Copy Dockerfile to agent
+      copy:
+        src: Dockerfile
+        dest: ~/ansible/Dockerfile
+
+    - name: Copy index.html to agent
+      copy:
+        src: index.html
+        dest: ~/ansible/index.html
+
+    - name: Build Docker image
+      command: docker build -t cv_image ~/ansible
+
+    - name: Run Docker container
+      command: docker run -d --name my_cv -p 80:80 cv_image
